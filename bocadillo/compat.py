@@ -1,5 +1,4 @@
 import asyncio
-import inspect
 from typing import Callable, Coroutine
 
 from starlette.concurrency import run_in_threadpool

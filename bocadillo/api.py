@@ -1,24 +1,19 @@
 """The Bocadillo API class."""
 import inspect
 import os
-from contextlib import contextmanager
 from http import HTTPStatus
-from typing import (Optional, Tuple, Type, List, Dict, Any, Union, Coroutine)
+from typing import (Optional, Tuple, Type, List, Dict, Any, Union)
 
 from asgiref.wsgi import WsgiToAsgi
-from jinja2 import FileSystemLoader
-from starlette.middleware.cors import CORSMiddleware
-from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.testclient import TestClient
 from uvicorn.main import run, get_logger
 from uvicorn.reloaders.statreload import StatReload
 
 from .checks import check_route
 from .constants import ALL_HTTP_METHODS
-from .cors import DEFAULT_CORS_CONFIG
 from .error_handlers import ErrorHandler, handle_http_error
 from .exceptions import HTTPError
+from .extensions import BaseExtension
 from .hooks import HookFunction
 from .media import Media
 from .middleware import CommonMiddleware, RoutingMiddleware
@@ -26,8 +21,6 @@ from .redirection import Redirection
 from .request import Request
 from .response import Response
 from .route import Route
-from .static import static
-from .templates import Template, get_templates_environment
 from .types import ASGIApp, WSGIApp, ASGIAppInstance
 
 
@@ -36,33 +29,6 @@ class API:
 
     Parameters
     ----------
-    templates_dir : str, optional
-        The name of the directory containing templates, relative to
-        the application entry point.
-        Defaults to 'templates'.
-    static_dir: str, optional
-        The name of the directory containing static files, relative to
-        the application entry point.
-        Defaults to 'static'.
-    static_root : str, optional
-        The path prefix for static assets.
-        Defaults to 'static'.
-    allowed_hosts : list of str, optional
-        A list of hosts which the server is allowed to run at.
-        If the list contains '*', any host is allowed.
-        Defaults to ['*'].
-    enable_cors : bool, optional
-        If True, Cross Origin Resource Sharing will be configured according
-        to `cors_config`.
-        Defaults to False.
-    cors_config : dict, optional
-        A dictionary of CORS configuration parameters.
-        Defaults to `{'allow_origins': [], 'allow_methods': ['GET']}`.
-        See also: https://www.starlette.io/middleware/#corsmiddleware
-    enable_hsts : bool, optional
-        If True, enable HSTS (HTTP Strict Transport Security) and automatically
-        redirect HTTP traffic to HTTPS.
-        Defaults to False.
     media_type : str, optional
         Determines how values given to `res._media` are serialized.
         Can be one of the supported _media types.
@@ -70,59 +36,35 @@ class API:
     """
 
     _error_handlers: List[Tuple[Type[Exception], ErrorHandler]]
+    extensions = []
 
-    def __init__(
-            self,
-            templates_dir: str = 'templates',
-            static_dir: Optional[str] = 'static',
-            static_root: Optional[str] = 'static',
-            allowed_hosts: List[str] = None,
-            enable_cors: bool = False,
-            cors_config: dict = None,
-            enable_hsts: bool = False,
-            media_type: Optional[str] = Media.JSON,
-    ):
+    def __init__(self, media_type: Optional[str] = Media.JSON, **kwargs):
         self._routes: Dict[str, Route] = {}
         self._named_routes: Dict[str, Route] = {}
 
         self._error_handlers = []
         self.add_error_handler(HTTPError, handle_http_error)
 
-        self._templates = get_templates_environment([
-            os.path.abspath(templates_dir),
-        ])
-        self._templates.globals.update(self._get_template_globals())
-
         self._extra_apps: Dict[str, Any] = {}
 
         self.client = self._build_client()
-
-        if static_dir is not None:
-            if static_root is None:
-                static_root = static_dir
-            self.mount(static_root, static(static_dir))
-
-        if allowed_hosts is None:
-            allowed_hosts = ['*']
-        self.allowed_hosts = allowed_hosts
-
-        if cors_config is None:
-            cors_config = {}
-        self.cors_config = {**DEFAULT_CORS_CONFIG, **cors_config}
 
         self._media = Media(media_type=media_type)
 
         # Middleware
         self._routing_middleware = RoutingMiddleware(self)
         self._common_middleware = CommonMiddleware(self._routing_middleware)
-        self.add_middleware(
-            TrustedHostMiddleware,
-            allowed_hosts=self.allowed_hosts,
-        )
-        if enable_cors:
-            self.add_middleware(CORSMiddleware, **self.cors_config)
-        if enable_hsts:
-            self.add_middleware(HTTPSRedirectMiddleware)
+
+        self._init_extensions(**kwargs)
+
+    @classmethod
+    def extend(cls, *extensions: BaseExtension):
+        """Register a new extension."""
+        cls.extensions += extensions
+
+    def _init_extensions(self, **kwargs):
+        for extension in type(self).extensions:
+            extension.init(self, **kwargs)
 
     def _build_client(self) -> TestClient:
         return TestClient(self)
@@ -320,89 +262,6 @@ class API:
         else:
             assert url is not None, 'url is expected if no route name is given'
         raise Redirection(url=url, permanent=permanent)
-
-    def _get_template_globals(self) -> dict:
-        return {
-            'url_for': self.url_for,
-        }
-
-    @property
-    def templates_dir(self) -> str:
-        loader: FileSystemLoader = self._templates.loader
-        return loader.searchpath[0]
-
-    @templates_dir.setter
-    def templates_dir(self, templates_dir: str):
-        loader: FileSystemLoader = self._templates.loader
-        loader.searchpath = [os.path.abspath(templates_dir)]
-
-    def _get_template(self, name: str) -> Template:
-        return self._templates.get_template(name)
-
-    @contextmanager
-    def _prevent_async_template_rendering(self):
-        """If enabled, temporarily disable async template rendering.
-
-        Notes
-        -----
-        Hot fix for a bug with Jinja2's async environment, which always
-        renders asynchronously even under `render()`.
-        Example error:
-        `RuntimeError: There is no current event loop in thread [...]`
-        """
-        if not self._templates.is_async:
-            yield
-            return
-
-        self._templates.is_async = False
-        try:
-            yield
-        finally:
-            self._templates.is_async = True
-
-    @staticmethod
-    def _prepare_context(context: dict = None, **kwargs):
-        if context is None:
-            context = {}
-        context.update(kwargs)
-        return context
-
-    async def template(self, name_: str,
-                       context: dict = None, **kwargs) -> Coroutine:
-        """Render a template asynchronously.
-
-        Can only be used within `async`  functions.
-
-        Parameters
-        ----------
-        name_ : str
-            Name of the template, located inside `templates_dir`.
-            Trailing underscore to avoid collisions with a potential
-            context variable named 'name'.
-        context : dict
-            Context variables to inject in the template.
-        """
-        context = self._prepare_context(context, **kwargs)
-        return await self._get_template(name_).render_async(context)
-
-    def template_sync(self, name_: str, context: dict = None, **kwargs) -> str:
-        """Render a template synchronously.
-
-        See Also
-        --------
-        .template()
-        """
-        context = self._prepare_context(context, **kwargs)
-        with self._prevent_async_template_rendering():
-            return self._get_template(name_).render(context)
-
-    def template_string(self, source: str, context: dict = None,
-                        **kwargs) -> str:
-        """Render a template from a string (synchronous)."""
-        context = self._prepare_context(context, **kwargs)
-        with self._prevent_async_template_rendering():
-            template = self._templates.from_string(source=source)
-            return template.render(context)
 
     def run(self,
             host: str = None,
