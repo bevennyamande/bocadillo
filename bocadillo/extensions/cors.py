@@ -8,7 +8,7 @@ DEFAULT_CORS_CONFIG = {
 }
 
 
-class CORSExtension(BaseExtension):
+class CORS(BaseExtension):
     """Add support for CORS headers."""
 
     def init(self, app, enable_cors: bool = False, cors_config: dict = None,

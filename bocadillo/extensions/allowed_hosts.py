@@ -5,7 +5,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from .base import BaseExtension
 
 
-class AllowedHostsExtension(BaseExtension):
+class AllowedHosts(BaseExtension):
 
     def init(self, app, allowed_hosts: List[str] = None, **kwargs):
         """

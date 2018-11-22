@@ -16,7 +16,7 @@ def get_templates_environment(template_dirs: List[str]):
     )
 
 
-class TemplatesExtension(BaseExtension):
+class Templates(BaseExtension):
 
     def __init__(self):
         self.app = None

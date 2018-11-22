@@ -3,7 +3,7 @@ from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 from .base import BaseExtension
 
 
-class HSTSExtension(BaseExtension):
+class HSTS(BaseExtension):
 
     def init(self, app, enable_hsts: bool = False, **kwargs):
         """Initialize an app with HSTS configuration.

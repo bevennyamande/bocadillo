@@ -1,14 +1,14 @@
-from .allowed_hosts import AllowedHostsExtension
+from .allowed_hosts import AllowedHosts
 from .base import BaseExtension
-from .cors import CORSExtension
-from .hsts import HSTSExtension
-from .static import StaticExtension
-from .templates import TemplatesExtension
+from .cors import CORS
+from .hsts import HSTS
+from .static import Static
+from .templates import Templates
 
 builtin_extensions = [
-    AllowedHostsExtension(),
-    StaticExtension(),
-    CORSExtension(),
-    HSTSExtension(),
-    TemplatesExtension(),
+    AllowedHosts(),
+    Static(),
+    CORS(),
+    HSTS(),
+    Templates(),
 ]

@@ -4,7 +4,7 @@ from ..static import static
 from .base import BaseExtension
 
 
-class StaticExtension(BaseExtension):
+class Static(BaseExtension):
 
     def init(self,
              app,
