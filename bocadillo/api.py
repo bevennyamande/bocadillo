@@ -2,7 +2,7 @@
 import inspect
 import os
 from http import HTTPStatus
-from typing import (Optional, Tuple, Type, List, Dict, Any, Union)
+from typing import Optional, Tuple, Type, List, Dict, Any, Union
 
 from asgiref.wsgi import WsgiToAsgi
 from starlette.testclient import TestClient
