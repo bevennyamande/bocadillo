@@ -13,7 +13,7 @@ from .checks import check_route
 from .constants import ALL_HTTP_METHODS
 from .error_handlers import ErrorHandler, handle_http_error
 from .exceptions import HTTPError
-from .extensions import BaseExtension
+from .extensions.base import BaseExtension
 from .hooks import HookFunction
 from .media import Media
 from .middleware import CommonMiddleware, RoutingMiddleware
