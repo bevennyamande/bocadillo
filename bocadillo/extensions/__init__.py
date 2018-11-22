@@ -1,7 +1,7 @@
 from .allowed_hosts import AllowedHosts
 from .cors import CORS
 from .hsts import HSTS
-from .static import Static
+from .staticfiles import Static
 from .templates import Templates
 
 builtin_extensions = [

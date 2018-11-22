@@ -3,7 +3,7 @@ from typing import Callable, Coroutine
 
 from starlette.concurrency import run_in_threadpool
 
-from .types import WSGIApp
+from .app_types import WSGIApp
 
 
 def empty_wsgi_app() -> WSGIApp:

@@ -21,7 +21,7 @@ from .redirection import Redirection
 from .request import Request
 from .response import Response
 from .route import Route
-from .types import ASGIApp, WSGIApp, ASGIAppInstance
+from .app_types import ASGIApp, WSGIApp, ASGIAppInstance
 
 
 class API:
