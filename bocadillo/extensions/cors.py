@@ -11,13 +11,13 @@ DEFAULT_CORS_CONFIG = {
 class CORS(BaseExtension):
     """Add support for CORS headers."""
 
-    def init(self, app, enable_cors: bool = False, cors_config: dict = None,
+    def init(self, api, enable_cors: bool = False, cors_config: dict = None,
              **kwargs):
         """Initialize an app with CORS headers configuration.
 
         Parameters
         ----------
-        app : API
+        api : API
         enable_cors : bool, optional
             If True, Cross Origin Resource Sharing will be configured according
             to `cors_config`.
@@ -30,4 +30,4 @@ class CORS(BaseExtension):
         if not enable_cors:
             return
         cors_config = {**DEFAULT_CORS_CONFIG, **(cors_config or {})}
-        app.add_middleware(CORSMiddleware, **cors_config)
+        api.add_middleware(CORSMiddleware, **cors_config)

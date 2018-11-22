@@ -7,12 +7,12 @@ from .base import BaseExtension
 
 class AllowedHosts(BaseExtension):
 
-    def init(self, app, allowed_hosts: List[str] = None, **kwargs):
+    def init(self, api, allowed_hosts: List[str] = None, **kwargs):
         """
 
         Parameters
         ----------
-        app : API
+        api : API
         allowed_hosts : list of str, optional
             A list of hosts which the server is allowed to run at.
             If the list contains '*', any host is allowed.
@@ -20,4 +20,4 @@ class AllowedHosts(BaseExtension):
         """
         if allowed_hosts is None:
             allowed_hosts = ['*']
-        app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+        api.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)

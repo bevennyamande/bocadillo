@@ -22,25 +22,25 @@ class Templates(BaseExtension):
         self.app = None
         self.environment = None
 
-    def init(self, app, templates_dir: str = 'templates', **kwargs):
+    def init(self, api, templates_dir: str = 'templates', **kwargs):
         """Initialize an app with templates.
 
         Parameters
         ----------
-        app : API
+        api : API
         templates_dir : str, optional
             The name of the directory containing templates, relative to
             the application entry point.
             Defaults to 'templates'.
         """
-        self.app = app
+        self.app = api
         self.environment = get_templates_environment([
             os.path.abspath(templates_dir),
         ])
         self.environment.globals.update(self._get_template_globals())
 
-        self.alias_methods(app, 'template', 'template_string', 'template_sync')
-        self.alias_property(app, 'templates_dir', has_setter=True)
+        self.alias_methods(api, 'template', 'template_string', 'template_sync')
+        self.alias_property(api, 'templates_dir', has_setter=True)
 
     def _get_template_globals(self) -> dict:
         return {

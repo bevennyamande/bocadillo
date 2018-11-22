@@ -4,16 +4,16 @@ class BaseExtension:
     def init(self, app, **kwargs):
         pass
 
-    def alias_methods(self, app, *method_names: str):
+    def alias_methods(self, api, *method_names: str):
         """Alias methods of the extension onto the app.
 
         Parameters
         ----------
-        app : API
+        api : API
         method_names : str
         """
         for method_name in method_names:
-            setattr(app, method_name, getattr(self, method_name))
+            setattr(api, method_name, getattr(self, method_name))
 
     def alias_property(self, app, property_name: str, has_setter=False):
         """Alias a property of the extension onto the app.

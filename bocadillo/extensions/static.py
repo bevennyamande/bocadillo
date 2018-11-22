@@ -7,7 +7,7 @@ from .base import BaseExtension
 class Static(BaseExtension):
 
     def init(self,
-             app,
+             api,
              static_dir: Optional[str] = 'static',
              static_root: Optional[str] = 'static',
              **kwargs):
@@ -15,7 +15,7 @@ class Static(BaseExtension):
 
         Parameters
         ----------
-        app : API
+        api : API
         static_dir: str, optional
             The name of the directory containing static files, relative to
             the application entry point.
@@ -29,4 +29,4 @@ class Static(BaseExtension):
 
         if static_root is None:
             static_root = static_dir
-        app.mount(static_root, static(static_dir))
+        api.mount(static_root, static(static_dir))
