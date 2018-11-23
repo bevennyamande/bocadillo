@@ -1,10 +1,12 @@
 from collections import defaultdict
 from functools import wraps
+from http import HTTPStatus
 from typing import Optional, List, Union, Callable, Dict
 
 from parse import parse
 
 from .compat import call_async
+from .exceptions import HTTPError
 from .hooks import HookFunction, BEFORE, AFTER, empty_hook
 from .view import View, create_callable_view
 
@@ -22,7 +24,7 @@ class Route:
                  name: str):
         self._pattern = pattern
 
-        self._view = create_callable_view(view=view, methods=methods)
+        self._view = create_callable_view(view=view)
         self._methods = methods
         self._name = name
 
@@ -86,18 +88,21 @@ class Route:
                 view: Callable = hookable
 
                 @wraps(view)
-                async def with_hook(self, req, res, **kwargs):
+                async def with_hook(self, req, res, **kw):
                     if hook == BEFORE:
-                        await hook_function(req, res, kwargs)
-                    await call_async(view, self, req, res, **kwargs)
+                        await hook_function(req, res, kw)
+                    await call_async(view, self, req, res, **kw)
                     if hook == AFTER:
-                        await hook_function(req, res, kwargs)
+                        await hook_function(req, res, kw)
 
                 return with_hook
 
         return decorator
 
     async def __call__(self, request, response, **kwargs) -> None:
+        if request.method not in self._methods:
+            raise HTTPError(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
         view = self._view
         await call_async(self.hooks[BEFORE], request, response, kwargs)
         await view(request, response, **kwargs)

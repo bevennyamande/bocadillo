@@ -2,14 +2,16 @@
 import inspect
 import os
 from http import HTTPStatus
-from typing import Optional, Tuple, Type, List, Dict, Any, Union
+from typing import Optional, Tuple, Type, List, Dict, Any, Union, Callable
 
 from asgiref.wsgi import WsgiToAsgi
 from starlette.testclient import TestClient
 from uvicorn.main import run, get_logger
 from uvicorn.reloaders.statreload import StatReload
 
+from .app_types import ASGIApp, WSGIApp, ASGIAppInstance
 from .checks import check_route
+from .compat import call_async
 from .constants import ALL_HTTP_METHODS
 from .error_handlers import ErrorHandler, handle_http_error
 from .exceptions import HTTPError
@@ -21,7 +23,6 @@ from .redirection import Redirection
 from .request import Request
 from .response import Response
 from .route import Route
-from .app_types import ASGIApp, WSGIApp, ASGIAppInstance
 
 
 class API:
@@ -172,8 +173,16 @@ class API:
         methods = [method.upper() for method in methods]
 
         def wrapper(view):
+            nonlocal methods
             if inspect.isclass(view):
                 view = view()
+                if hasattr(view, 'handle'):
+                    methods = ALL_HTTP_METHODS
+                else:
+                    methods = [
+                        method for method in ALL_HTTP_METHODS
+                        if method.lower() in dir(view)
+                    ]
             check_route(pattern, view, methods)
             route = Route(
                 pattern=pattern,
@@ -313,7 +322,12 @@ class API:
         else:
             run(self, host=host, port=port)
 
-    async def dispatch(self, request: Request) -> Response:
+    async def dispatch(
+        self,
+        request: Request,
+        before: List[Callable] = None,
+        after: List[Callable] = None,
+    ) -> Response:
         """Dispatch a request and return a response."""
         response = Response(request, media=self._media)
 
@@ -324,7 +338,15 @@ class API:
                 raise HTTPError(status=404)
             else:
                 try:
+                    if before:
+                        for func in before:
+                            await call_async(func, request)
+
                     await route(request, response, **kwargs)
+
+                    if after:
+                        for func in after:
+                            await call_async(func, request, response)
                 except Redirection as redirection:
                     response = redirection.response
         except Exception as e:
