@@ -2,7 +2,17 @@
 import inspect
 import os
 from http import HTTPStatus
-from typing import Optional, Tuple, Type, List, Dict, Any, Union, Callable
+from typing import (
+    Optional,
+    Tuple,
+    Type,
+    List,
+    Dict,
+    Any,
+    Union,
+    Coroutine,
+    Callable,
+)
 
 from asgiref.wsgi import WsgiToAsgi
 from starlette.testclient import TestClient
@@ -115,8 +125,8 @@ class API:
         >>> import bocadillo
         >>> api = bocadillo.API()
         >>> @api.error_handler(KeyError)
-        ... def on_key_error(req, resp, exc):
-        ...     pass  # perhaps set resp.content and resp.status_code
+        ... def on_key_error(req, res, exc):
+        ...     pass  # perhaps set res.content and res.status_code
         """
 
         def wrapper(handler):
@@ -167,7 +177,7 @@ class API:
         >>> import bocadillo
         >>> api = bocadillo.API()
         >>> @api.route('/greet/{person}')
-        ... def greet(req, resp, person: str):
+        ... def greet(req, res, person: str):
         ...     pass
         """
         if methods is None:
