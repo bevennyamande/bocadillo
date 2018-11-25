@@ -1,3 +1,6 @@
+"""Base extension classes and mixins."""
+
+
 class BaseExtension:
     """Base class for Bocadillo extensions."""
 
@@ -42,3 +45,39 @@ class BaseExtension:
             set_value = None
 
         setattr(type(api), property_name, property(get_value, set_value))
+
+
+class UseOnFlagExtensionMixin:
+    """Mixin for extensions enabled by the value of a bool keyword argument.
+
+    Class Attributes
+    ----------------
+        flag : str, optional
+        The name of the keyword argument that will be checked to decide
+        whether the middleware should be added.
+        Defauts to None (always add the middleware).
+    """
+
+    flag: str = None
+
+    def should_use(self, **kwargs) -> bool:
+        """Return whether the extension should be used."""
+        if self.flag is None:
+            return True
+        return kwargs.get(self.flag)
+
+
+class MiddlewareExtension(UseOnFlagExtensionMixin, BaseExtension):
+    """Base class for extensions that add middleware to the API object."""
+
+    middleware = None
+
+    def get_middleware_kwargs(self, **kwargs) -> dict:
+        """Return keyword arguments to pass to the middleware constructor."""
+        return {}
+
+    def init(self, api, **kwargs) -> None:
+        if not self.should_use(**kwargs):
+            return
+        middleware_kwargs = self.get_middleware_kwargs(**kwargs)
+        api.add_middleware(self.middleware, **middleware_kwargs)

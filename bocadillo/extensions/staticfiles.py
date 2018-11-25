@@ -18,12 +18,15 @@ def static(directory: str) -> WSGIApp:
 
 
 class Static(BaseExtension):
+    """Serve static files."""
 
-    def init(self,
-             api,
-             static_dir: Optional[str] = 'static',
-             static_root: Optional[str] = 'static',
-             **kwargs):
+    def init(
+        self,
+        api,
+        static_dir: Optional[str] = 'static',
+        static_root: Optional[str] = 'static',
+        **kwargs,
+    ):
         """Initialize an app with static files configuration.
 
         Parameters

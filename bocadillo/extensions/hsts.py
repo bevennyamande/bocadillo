@@ -1,20 +1,17 @@
 from starlette.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from .base import BaseExtension
+from .base import MiddlewareExtension
 
 
-class HSTS(BaseExtension):
+class HSTS(MiddlewareExtension):
+    """Extension for HSTS (HTTP Strict Transport Security).
 
-    def init(self, api, enable_hsts: bool = False, **kwargs):
-        """Initialize an app with HSTS configuration.
+    Parameters
+    ----------
+    enable_hsts : bool, optional
+        If True, automatically redirect HTTP traffic to HTTPS.
+        Defaults to False.
+    """
 
-        Parameters
-        ----------
-        api : API
-        enable_hsts : bool, optional
-            If True, enable HSTS (HTTP Strict Transport Security) and
-            automatically redirect HTTP traffic to HTTPS.
-            Defaults to False.
-        """
-        if enable_hsts:
-            api.add_middleware(HTTPSRedirectMiddleware)
+    flag = 'enable_hsts'
+    middleware = HTTPSRedirectMiddleware

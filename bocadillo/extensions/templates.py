@@ -17,6 +17,8 @@ def get_templates_environment(template_dirs: List[str]):
 
 
 class Templates(BaseExtension):
+    """Add templating functionality."""
+
     def __init__(self):
         self.api = None
         self.environment = None
