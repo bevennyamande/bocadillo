@@ -1,7 +1,7 @@
 class BaseExtension:
     """Base class for Bocadillo extensions."""
 
-    def init(self, app, **kwargs):
+    def init(self, api, **kwargs):
         pass
 
     def alias_methods(self, api, *method_names: str):
@@ -15,12 +15,12 @@ class BaseExtension:
         for method_name in method_names:
             setattr(api, method_name, getattr(self, method_name))
 
-    def alias_property(self, app, property_name: str, has_setter=False):
+    def alias_property(self, api, property_name: str, has_setter=False):
         """Alias a property of the extension onto the app.
 
         Parameters
         ----------
-        app : API
+        api : API
         property_name : str
         has_setter : bool, optional
             Whether the aliased property has a setter.
@@ -33,10 +33,12 @@ class BaseExtension:
             return getattr(this, property_name)
 
         if has_setter:
+
             def set_value(self, value):
                 nonlocal this
                 setattr(this, property_name, value)
+
         else:
             set_value = None
 
-        setattr(type(app), property_name, property(get_value, set_value))
+        setattr(type(api), property_name, property(get_value, set_value))

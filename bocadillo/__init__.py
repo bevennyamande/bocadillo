@@ -5,6 +5,6 @@ from .extensions import builtin_extensions
 from .extensions.staticfiles import static
 
 for extension in builtin_extensions:
-    API.extend(extension)
+    API.use(extension)
 
 __version__ = '0.5.0'

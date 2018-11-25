@@ -59,8 +59,8 @@ class API:
         self._init_extensions(**kwargs)
 
     @classmethod
-    def extend(cls, *extensions: BaseExtension):
-        """Register a new extension."""
+    def use(cls, *extensions: BaseExtension):
+        """Register an extension to be used."""
         cls.extensions += extensions
 
     def _init_extensions(self, **kwargs):
@@ -92,8 +92,9 @@ class API:
     def media_handlers(self, media_handlers: dict):
         self._media.handlers = media_handlers
 
-    def add_error_handler(self, exception_cls: Type[Exception],
-                          handler: ErrorHandler):
+    def add_error_handler(
+        self, exception_cls: Type[Exception], handler: ErrorHandler
+    ):
         """Register a new error handler.
 
         Parameters
@@ -126,7 +127,8 @@ class API:
 
     def _find_handlers(self, exception):
         return (
-            handler for err_type, handler in self._error_handlers
+            handler
+            for err_type, handler in self._error_handlers
             if isinstance(exception, err_type)
         )
 
@@ -144,8 +146,9 @@ class API:
         else:
             raise exception from None
 
-    def route(self, pattern: str, *, methods: List[str] = None,
-              name: str = None):
+    def route(
+        self, pattern: str, *, methods: List[str] = None, name: str = None
+    ):
         """Register a new route.
 
         Parameters
@@ -180,15 +183,13 @@ class API:
                     methods = ALL_HTTP_METHODS
                 else:
                     methods = [
-                        method for method in ALL_HTTP_METHODS
+                        method
+                        for method in ALL_HTTP_METHODS
                         if method.lower() in dir(view)
                     ]
             check_route(pattern, view, methods)
             route = Route(
-                pattern=pattern,
-                view=view,
-                methods=methods,
-                name=name,
+                pattern=pattern, view=view, methods=methods, name=name
             )
 
             self._routes[pattern] = route
@@ -247,11 +248,14 @@ class API:
         route = self._get_route_or_404(name)
         return route.url(**kwargs)
 
-    def redirect(self, *,
-                 name: str = None,
-                 url: str = None,
-                 permanent: bool = False,
-                 **kwargs):
+    def redirect(
+        self,
+        *,
+        name: str = None,
+        url: str = None,
+        permanent: bool = False,
+        **kwargs
+    ):
         """Redirect to another route.
 
         Parameters
@@ -272,11 +276,13 @@ class API:
             assert url is not None, 'url is expected if no route name is given'
         raise Redirection(url=url, permanent=permanent)
 
-    def run(self,
-            host: str = None,
-            port: int = None,
-            debug: bool = False,
-            log_level: str = 'info'):
+    def run(
+        self,
+        host: str = None,
+        port: int = None,
+        debug: bool = False,
+        log_level: str = 'info',
+    ):
         """Serve the application using uvicorn.
 
         Parameters
@@ -312,13 +318,16 @@ class API:
 
         if debug:
             reloader = StatReload(get_logger(log_level))
-            reloader.run(run, {
-                'app': self,
-                'host': host,
-                'port': port,
-                'log_level': log_level,
-                'debug': debug,
-            })
+            reloader.run(
+                run,
+                {
+                    'app': self,
+                    'host': host,
+                    'port': port,
+                    'log_level': log_level,
+                    'debug': debug,
+                },
+            )
         else:
             run(self, host=host, port=port)
 
@@ -373,7 +382,7 @@ class API:
                 continue
             # Remove prefix from path so that the request is made according
             # to the mounted app's point of view.
-            scope['path'] = path[len(prefix):]
+            scope['path'] = path[len(prefix) :]
             try:
                 return app(scope)
             except TypeError:

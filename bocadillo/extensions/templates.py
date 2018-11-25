@@ -17,9 +17,8 @@ def get_templates_environment(template_dirs: List[str]):
 
 
 class Templates(BaseExtension):
-
     def __init__(self):
-        self.app = None
+        self.api = None
         self.environment = None
 
     def init(self, api, templates_dir: str = 'templates', **kwargs):
@@ -33,19 +32,17 @@ class Templates(BaseExtension):
             the application entry point.
             Defaults to 'templates'.
         """
-        self.app = api
-        self.environment = get_templates_environment([
-            os.path.abspath(templates_dir),
-        ])
+        self.api = api
+        self.environment = get_templates_environment(
+            [os.path.abspath(templates_dir)]
+        )
         self.environment.globals.update(self._get_template_globals())
 
         self.alias_methods(api, 'template', 'template_string', 'template_sync')
         self.alias_property(api, 'templates_dir', has_setter=True)
 
     def _get_template_globals(self) -> dict:
-        return {
-            'url_for': self.app.url_for,
-        }
+        return {'url_for': self.api.url_for}
 
     @property
     def templates_dir(self) -> str:
@@ -88,8 +85,9 @@ class Templates(BaseExtension):
         context.update(kwargs)
         return context
 
-    async def template(self, name_: str,
-                       context: dict = None, **kwargs) -> Coroutine:
+    async def template(
+        self, name_: str, context: dict = None, **kwargs
+    ) -> Coroutine:
         """Render a template asynchronously.
 
         Can only be used within `async`  functions.
@@ -117,8 +115,9 @@ class Templates(BaseExtension):
         with self._prevent_async_template_rendering():
             return self._get_template(name_).render(context)
 
-    def template_string(self, source: str, context: dict = None,
-                        **kwargs) -> str:
+    def template_string(
+        self, source: str, context: dict = None, **kwargs
+    ) -> str:
         """Render a template from a string (synchronous)."""
         context = self._prepare_context(context, **kwargs)
         with self._prevent_async_template_rendering():
