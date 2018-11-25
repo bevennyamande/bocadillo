@@ -1,5 +1,5 @@
 from .allowed_hosts import AllowedHosts
-from .base import BaseExtension
+from .base import *
 from .cors import CORS
 from .hsts import HSTS
 from .staticfiles import Static

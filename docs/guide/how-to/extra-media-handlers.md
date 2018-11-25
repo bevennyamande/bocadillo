@@ -1,4 +1,4 @@
-# Register extra media handlers
+# How to add extra media handlers
 
 In Bocadillo, the default behavior for `res.media` is to send JSON data.
 

@@ -64,16 +64,18 @@ module.exports = {
                     '/guide/topics/request-handling',
                     '/guide/topics/json',
                     '/guide/topics/templates',
+                    '/guide/topics/extensions',
                     '/guide/topics/testing',
                     '/guide/topics/deployment',
                 ],
             },
             {
-                title: 'How To',
+                title: 'How-To Guides',
                 collapsable: false,
                 children: [
                     '/guide/how-to/custom-cli-commands',
                     '/guide/how-to/extra-media-handlers',
+                    '/guide/how-to/extensions',
                 ],
             },
             {

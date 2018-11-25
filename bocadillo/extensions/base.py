@@ -1,5 +1,7 @@
 """Base extension classes and mixins."""
 
+__all__ = ['BaseExtension', 'MiddlewareExtension']
+
 
 class BaseExtension:
     """Base class for Bocadillo extensions."""
@@ -45,6 +47,9 @@ class BaseExtension:
             set_value = None
 
         setattr(type(api), property_name, property(get_value, set_value))
+
+    def __repr__(self):
+        return type(self).__name__ + '()'
 
 
 class UseOnFlagExtensionMixin:

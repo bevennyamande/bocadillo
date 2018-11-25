@@ -1,4 +1,4 @@
-# Write custom CLI commands
+# How to write custom CLI commands
 
 > **Note**: this feature is experimental. Use with care!
 
